@@ -50,12 +50,18 @@ target_link_libraries(urdf_visualizer_hyq4
   ${catkin_LIBRARIES}
 )
 
+add_executable(urdf_visualizer_champ src/exe/urdf_visualizer_champ.cc)
+target_link_libraries(urdf_visualizer_champ
+  ${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
 #############
 ## Install ##
 #############
 # Mark library for installation
 install(
-  TARGETS ${PROJECT_NAME} urdf_visualizer_hyq1 urdf_visualizer_hyq2 urdf_visualizer_hyq4
+  TARGETS ${PROJECT_NAME} urdf_visualizer_hyq1 urdf_visualizer_hyq2 urdf_visualizer_hyq4 urdf_visualizer_champ
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
