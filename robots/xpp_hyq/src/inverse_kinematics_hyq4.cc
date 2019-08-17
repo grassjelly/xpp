@@ -38,6 +38,13 @@ Joints
 InverseKinematicsHyq4::GetAllJointAngles(const EndeffectorsPos& x_B) const
 {
   Vector3d ee_pos_H; // foothold expressed in hip frame
+  Vector3d ee_test; // foothold expressed in hip frame
+
+  Vector3d nominal_foot; // foothold expressed in hip frame
+  double temp_x;
+  double temp_y;
+  double temp_z;
+
   std::vector<Eigen::VectorXd> q_vec;
 
   // make sure always exactly 4 elements
@@ -46,30 +53,49 @@ InverseKinematicsHyq4::GetAllJointAngles(const EndeffectorsPos& x_B) const
 
   for (int ee=0; ee<pos_B.size(); ++ee) {
 
-    HyqlegInverseKinematics::KneeBend bend = HyqlegInverseKinematics::Forward;
+    HyqlegInverseKinematics::KneeBend bend = HyqlegInverseKinematics::Backward;
+    double temp_x;
+    double temp_y;
+    double temp_z;
 
     using namespace quad;
     switch (ee) {
       case LF:
         ee_pos_H = pos_B.at(ee);
+        nominal_foot = base2hip_LF_;
+        ee_test = test_target;
         break;
       case RF:
-        ee_pos_H = pos_B.at(ee).cwiseProduct(Eigen::Vector3d(1,-1,1));
+        ee_pos_H = pos_B.at(ee);
+        nominal_foot = base2hip_LF_.cwiseProduct(Eigen::Vector3d(1,-1,1));
+        ee_test = test_target.cwiseProduct(Eigen::Vector3d(1,-1,1));
         break;
       case LH:
-        ee_pos_H = pos_B.at(ee).cwiseProduct(Eigen::Vector3d(-1,1,1));
+        ee_pos_H = pos_B.at(ee);
+        nominal_foot = base2hip_LF_.cwiseProduct(Eigen::Vector3d(-1,1,1));
+        ee_test = test_target.cwiseProduct(Eigen::Vector3d(-1,1,1));
         bend = HyqlegInverseKinematics::Backward;
         break;
       case RH:
-        ee_pos_H = pos_B.at(ee).cwiseProduct(Eigen::Vector3d(-1,-1,1));
+        ee_pos_H = pos_B.at(ee);
+        nominal_foot = base2hip_LF_.cwiseProduct(Eigen::Vector3d(-1,-1,1));
+        ee_test = test_target.cwiseProduct(Eigen::Vector3d(-1,-1,1));
         bend = HyqlegInverseKinematics::Backward;
         break;
       default: // joint angles for this foot do not exist
         break;
     }
 
-    ee_pos_H -= base2hip_LF_;
-    q_vec.push_back(leg.GetJointAngles(ee_pos_H, bend));
+    temp_x = - ee_test[Z];
+    temp_y = nominal_foot[X] - ee_test[X];
+    temp_z = ee_test[Y] - nominal_foot[Y];
+
+    // temp_x = -ee_pos_H[Z];
+    // temp_y = nominal_foot[X] - ee_pos_H[X];
+    // temp_z = ee_pos_H[Y] - nominal_foot[Y];
+
+    ee_pos_H << temp_x, temp_y, temp_z;
+    q_vec.push_back(leg.GetJointAngles(ee, ee_pos_H, bend));
   }
 
   return Joints(q_vec);

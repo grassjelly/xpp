@@ -1,4 +1,4 @@
-/******************************************************************************
+ /******************************************************************************
 Copyright (c) 2017, Alexander W. Winkler. All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,86 +33,56 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <map>
 
 #include <xpp_states/cartesian_declarations.h>
+#include <iostream>
 
 
 namespace xpp {
 
-
 HyqlegInverseKinematics::Vector3d
 HyqlegInverseKinematics::GetJointAngles (const Vector3d& ee_pos_B, KneeBend bend) const
 {
+
+}
+
+HyqlegInverseKinematics::Vector3d
+HyqlegInverseKinematics::GetJointAngles (int leg_id, const Vector3d& ee_pos_B, KneeBend bend) const
+{
   double q_HAA_bf, q_HAA_br, q_HFE_br; // rear bend of knees
   double q_HFE_bf, q_KFE_br, q_KFE_bf; // forward bend of knees
+  double HAA_to_HFE;
 
   Eigen::Vector3d xr;
   Eigen::Matrix3d R;
 
-  // translate to the local coordinate of the attachment of the leg
-  // and flip coordinate signs such that all computations can be done
-  // for the front-left leg
+  HAA_to_HFE = hfe_to_haa_z[Z];
   xr = ee_pos_B;
 
-  // compute the HAA angle
-  q_HAA_bf = q_HAA_br = -atan2(xr[Y],-xr[Z]);
 
-  // rotate into the HFE coordinate system (rot around X)
-  R << 1.0, 0.0, 0.0, 0.0, cos(q_HAA_bf), -sin(q_HAA_bf), 0.0, sin(q_HAA_bf), cos(q_HAA_bf);
+  if(leg_id == 1 || leg_id ==3)
+    HAA_to_HFE = -HAA_to_HFE;
 
+  q_HAA_bf = q_HAA_br = -(atan(xr[Z] / xr[X]) - (1.5708 - acos(HAA_to_HFE / sqrt(pow(xr[Z], 2) + pow(xr[X], 2)))));;
+  R <<  cos(q_HAA_bf), 0, sin(q_HAA_bf), 0, 1, 0, -sin(q_HAA_bf), 0, cos(q_HAA_bf);
   xr = (R * xr).eval();
-
-  // translate into the HFE coordinate system (along Z axis)
-  xr += hfe_to_haa_z;  //distance of HFE to HAA in z direction
-
-  // compute square of length from HFE to foot
-  double tmp1 = pow(xr[X],2)+pow(xr[Z],2);
+  
+  q_KFE_bf = q_KFE_br = -acos((pow(xr[X], 2) + pow(xr[Y], 2) - pow(length_thigh ,2) - pow(length_shank ,2)) / (2 * length_thigh * length_shank));
+  q_HFE_bf = q_HFE_br = (atan(xr[Y] / xr[X]) - atan( (length_shank * sin(q_KFE_bf)) / (length_thigh + (length_shank * cos(q_KFE_bf)))));
 
 
-  // compute temporary angles (with reachability check)
-  double lu = length_thigh;  // length of upper leg
-  double ll = length_shank;  // length of lower leg
-  double alpha = atan2(-xr[Z],xr[X]) - 0.5*M_PI;  //  flip and rotate to match HyQ joint definition
+//   // forward knee bend
+//   EnforceLimits(q_HAA_bf, HAA);
+//   EnforceLimits(q_HFE_bf, HFE);
+//   EnforceLimits(q_KFE_bf, KFE);
 
+//   // backward knee bend
+//   EnforceLimits(q_HAA_br, HAA);
+//   EnforceLimits(q_HFE_br, HFE);
+//   EnforceLimits(q_KFE_br, KFE);
 
-  double some_random_value_for_beta = (pow(lu,2)+tmp1-pow(ll,2))/(2.*lu*sqrt(tmp1)); // this must be between -1 and 1
-  if (some_random_value_for_beta > 1) {
-    some_random_value_for_beta = 1;
-  }
-  if (some_random_value_for_beta < -1) {
-    some_random_value_for_beta = -1;
-  }
-  double beta = acos(some_random_value_for_beta);
-
-  // compute Hip FE angle
-  q_HFE_bf = q_HFE_br = alpha + beta;
-
-
-  double some_random_value_for_gamma = (pow(ll,2)+pow(lu,2)-tmp1)/(2.*ll*lu);
-  // law of cosines give the knee angle
-  if (some_random_value_for_gamma > 1) {
-    some_random_value_for_gamma = 1;
-  }
-  if (some_random_value_for_gamma < -1) {
-    some_random_value_for_gamma = -1;
-  }
-  double gamma  = acos(some_random_value_for_gamma);
-
-
-  q_KFE_bf = q_KFE_br = gamma - M_PI;
-
-  // forward knee bend
-  EnforceLimits(q_HAA_bf, HAA);
-  EnforceLimits(q_HFE_bf, HFE);
-  EnforceLimits(q_KFE_bf, KFE);
-
-  // backward knee bend
-  EnforceLimits(q_HAA_br, HAA);
-  EnforceLimits(q_HFE_br, HFE);
-  EnforceLimits(q_KFE_br, KFE);
-
-  if (bend==Forward)
-    return Vector3d(q_HAA_bf, q_HFE_bf, q_KFE_bf);
-  else // backward
-    return Vector3d(q_HAA_br, -q_HFE_br, -q_KFE_br);
+//   if (bend==Forward)
+//     return Vector3d(q_HAA_bf, -q_HFE_bf, -q_KFE_bf);
+//   else // backward
+    return Vector3d(q_HAA_br, q_HFE_br, q_KFE_br);
 }
 
 void

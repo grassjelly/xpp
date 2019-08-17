@@ -55,7 +55,8 @@ public:
   int GetEECount() const override { return 4; };
 
 private:
-  Vector3d base2hip_LF_ = Vector3d(0.3735, 0.207, 0.0);
+  Vector3d base2hip_LF_ = Vector3d(0.175, 0.105, 0.0);
+  Vector3d test_target = Vector3d(0.175, 0.130, -0.21);
   HyqlegInverseKinematics leg;
 };
 

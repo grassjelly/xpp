@@ -56,6 +56,7 @@ public:
    * at the hip-aa (H).
    */
   Vector3d GetJointAngles(const Vector3d& ee_pos_H, KneeBend bend=Forward) const;
+  Vector3d GetJointAngles(int leg_id, const Vector3d& ee_pos_H, KneeBend bend=Forward) const;
 
   /**
    * @brief Restricts the joint angles to lie inside the feasible range
@@ -66,9 +67,9 @@ public:
   void EnforceLimits(double& q, HyqJointID joint) const;
 
 private:
-  Vector3d hfe_to_haa_z = Vector3d(0.0, 0.0, 0.08); //distance of HFE to HAA in z direction
-  double length_thigh = 0.35; // length of upper leg
-  double length_shank = 0.33; // length of lower leg
+  Vector3d hfe_to_haa_z = Vector3d(0.0, 0.0, 0.06); //distance of HFE to HAA in z direction
+  double length_thigh = 0.141; // length of upper leg
+  double length_shank = 0.141; // length of lower leg
 };
 
 } /* namespace xpp */

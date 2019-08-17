@@ -49,16 +49,17 @@ int main(int argc, char *argv[])
 {
   ::ros::init(argc, argv, "champ_urdf_visualizer");
 
-  const std::string joint_desired_hyq = "xpp/joint_hyq_des";
+  const std::string joint_desired_hyq = "xpp/joint_champ_des";
 
   auto hyq_ik = std::make_shared<InverseKinematicsHyq4>();
   CartesianJointConverter inv_kin_converter(hyq_ik,
 					    xpp_msgs::robot_state_desired,
 					    joint_desired_hyq);
 
-  // urdf joint names
+//   urdf joint names
   int n_ee = hyq_ik->GetEECount();
   int n_j  = HyqlegJointCount;
+
   std::vector<UrdfVisualizer::URDFName> joint_names(n_ee*n_j);
   joint_names.at(n_j*LF + HAA) = "lf_hip_joint";
   joint_names.at(n_j*LF + HFE) = "lf_upper_leg_joint";

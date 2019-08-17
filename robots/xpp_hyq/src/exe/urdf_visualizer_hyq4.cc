@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 {
   ::ros::init(argc, argv, "hyq_urdf_visualizer");
 
-  const std::string joint_desired_hyq = "xpp/joint_hyq_des";
+  const std::string joint_desired_hyq = "xpp/joint_hyq_desx";
 
   auto hyq_ik = std::make_shared<InverseKinematicsHyq4>();
   CartesianJointConverter inv_kin_converter(hyq_ik,
